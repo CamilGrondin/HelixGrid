@@ -2,7 +2,7 @@ const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 
 // URL du serveur central HelixGrid (Production HTTPS par défaut, avec fallback configurable)
-const DEFAULT_REMOTE_SERVER = "https://api.helixgrid.org";
+const DEFAULT_REMOTE_SERVER = "https://srv1091727.hstgr.cloud";
 let SERVER_URL = localStorage.getItem('helixgrid_server_url') || DEFAULT_REMOTE_SERVER;
 
 // ---------------------------------------------------------------------------
@@ -638,9 +638,9 @@ async function fetchLeaderboard() {
       try {
         res = await fetch(primaryUrl);
       } catch (netErr) {
-        const fallbackUrl = SERVER_URL.includes("api.helixgrid.org")
+        const fallbackUrl = SERVER_URL.includes("srv1091727.hstgr.cloud")
           ? `http://127.0.0.1:8000/leaderboard${query}`
-          : `https://api.helixgrid.org/leaderboard${query}`;
+          : `https://srv1091727.hstgr.cloud/leaderboard${query}`;
         try {
           res = await fetch(fallbackUrl);
         } catch (_) {

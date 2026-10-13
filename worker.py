@@ -19,7 +19,7 @@ from modules.docking_engine import run_docking, is_vina_available
 # Désactiver les avertissements C++ verbeux de RDKit
 RDLogger.DisableLog('rdApp.*')
 
-SERVER_URL = "http://127.0.0.1:8000"
+SERVER_URL = os.getenv("HELIXGRID_SERVER_URL", "https://srv1091727.hstgr.cloud")
 BATCH_SIZE = 50
 
 # Analyse des paramètres transmis par l'interface graphique ou la ligne de commande

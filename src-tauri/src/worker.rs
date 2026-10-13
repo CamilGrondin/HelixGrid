@@ -17,7 +17,7 @@ use tauri::{Emitter, Manager, Window};
 use tokio::time::sleep;
 use ed25519_dalek::{Signer, SigningKey, VerifyingKey};
 
-const DEFAULT_SERVER_URL: &str = "https://api.helixgrid.org";
+const DEFAULT_SERVER_URL: &str = "https://srv1091727.hstgr.cloud";
 const BATCH_SIZE: usize = 250;
 
 pub fn get_server_url() -> String {

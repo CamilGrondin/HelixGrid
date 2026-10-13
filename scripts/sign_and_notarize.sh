@@ -19,7 +19,7 @@ echo "  HelixGrid - Signature & Notarisation Apple (macOS)"
 echo "=========================================================="
 
 # 1. Vérification du certificat Developer ID Application
-DEFAULT_TEAM_ID="U4SSQ985J3"
+DEFAULT_TEAM_ID="Q78YXZ7Z7Z"
 IDENTITY="${APPLE_SIGNING_IDENTITY:-}"
 
 if [ -z "$IDENTITY" ]; then
@@ -64,8 +64,11 @@ done
 # 3. Compilation et packaging avec Tauri (y compris artefacts de mise à jour distante)
 echo ""
 echo "[*] Étape 2 : Compilation du bundle Tauri (.app, .dmg et artefacts d'update .tar.gz/.sig)..."
-if [ -f "${SRC_TAURI_DIR}/updater.key" ]; then
-    export TAURI_SIGNING_PRIVATE_KEY_PATH="${SRC_TAURI_DIR}/updater.key"
+if [ -f "${HOME}/.helixgrid-secrets/updater.key" ]; then
+    export TAURI_SIGNING_PRIVATE_KEY="$(cat "${HOME}/.helixgrid-secrets/updater.key")"
+    export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
+    echo "[+] Clé privée de signature Tauri activée (~/.helixgrid-secrets/updater.key)"
+elif [ -f "${SRC_TAURI_DIR}/updater.key" ]; then
     export TAURI_SIGNING_PRIVATE_KEY="$(cat "${SRC_TAURI_DIR}/updater.key")"
     export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
     echo "[+] Clé privée de signature Tauri activée (génération automatique des artefacts d'update signés)"

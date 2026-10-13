@@ -109,7 +109,9 @@ ENGINE_NAMES = {
     "generative_evolution": "IA Générative De Novo (SMARTS + Évolution RDKit)",
     "brics_fragment": "Recombinaison Rétrosynthétique (Fragments BRICS)",
     "deep_learning_onnx": "Screening Neural Haute Fréquence (Deep MLP ONNX)",
-    "swarm_active_learning": "Swarm Intelligence (Apprentissage Collaboratif)"
+    "swarm_active_learning": "Swarm Intelligence (Apprentissage Collaboratif)",
+    "chembl_rl_agent": "IA Prior ChEMBL + Apprentissage par Renforcement (RL Policy)",
+    "supercharged_ai": "IA Superchargée (3D Pocket Cross-Attention + GFlowNet + Chemical RAG)"
 }
 engine_name = ENGINE_NAMES.get(args.engine, args.engine)
 
@@ -189,6 +191,52 @@ def generate_molecules(pool_smiles: list, engine: str, count: int = 50) -> list:
                 candidates.append(s)
                 if len(candidates) >= count:
                     break
+
+    # Stratégie ChEMBL Reinforcement Learning Policy (Molecular GPT conditionné)
+    if engine == "chembl_rl_agent":
+        try:
+            from modules.chembl_rl_agent import load_chembl_agent, MultiObjectiveReward, TARGET_REGISTRY
+            agent_policy = load_chembl_agent()
+            if agent_policy is not None:
+                reward_engine = MultiObjectiveReward(w_affinity=0.4, w_sa=0.3, w_qed=0.3)
+                target_id = TARGET_REGISTRY.get(args.target, 0)
+                sampled_smis, _, _ = agent_policy.generate_and_score(
+                    reward_engine,
+                    num_samples=count * 2,
+                    target_id=target_id,
+                    use_guided=True
+                )
+                for s in sampled_smis:
+                    if s:
+                        admet = compute_admet_profile(s, max_sascore=5.0)
+                        if admet["lipinski_ok"] and admet["synthesizable"] and admet["pains_ok"]:
+                            candidates.append(s)
+                            if len(candidates) >= count:
+                                break
+        except Exception:
+            pass
+
+    # Stratégie Supercharged AI (Pocket-Aware 3D Cross-Attention + GFlowNet + Chemical RAG)
+    if engine == "supercharged_ai":
+        try:
+            from modules.pocket_gflownet_rag import load_supercharged_agent
+            super_agent = load_supercharged_agent(target_name=args.target)
+            if super_agent is not None:
+                rag_scaffolds = super_agent.rag.get_in_context_scaffolds(args.target, top_k=2)
+                for sc in rag_scaffolds:
+                    if sc and sc not in pool_smiles:
+                        pool_smiles.append(sc)
+
+                sampled_smis = super_agent.generate_candidates(count=count * 2)
+                for s in sampled_smis:
+                    if s:
+                        admet = compute_admet_profile(s, max_sascore=5.0)
+                        if admet["lipinski_ok"] and admet["synthesizable"] and admet["pains_ok"]:
+                            candidates.append(s)
+                            if len(candidates) >= count:
+                                break
+        except Exception:
+            pass
 
     # Stratégies classiques (SMARTS / BRICS)
     if len(candidates) < count:

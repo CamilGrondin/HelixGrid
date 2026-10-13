@@ -170,6 +170,8 @@ pub fn get_target_config(target: &str) -> TargetConfig {
 pub fn get_engine_name(engine_id: &str) -> &'static str {
     match engine_id {
         "generative_evolution" => "IA Générative De Novo (SMARTS + Évolution Rust Native)",
+        "supercharged_ai" => "IA Superchargée (3D Pocket Cross-Attention + GFlowNet + RAG)",
+        "chembl_rl_agent" => "RL Policy + MolecularGPT (ChEMBL 37)",
         "selfies_dmpnn" => "IA Générative Pure Rust + Réseau d'Affinité Vectorisé",
         "deep_learning_onnx" => "Screening Neural Haute Fréquence (Deep MLP ONNX)",
         "brics_fragment" => "Recombinaison Rétrosynthétique (Fragments BRICS)",

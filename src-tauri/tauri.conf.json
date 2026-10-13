@@ -1,0 +1,64 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "HelixGrid",
+  "version": "0.3.0",
+  "identifier": "com.camilgrondin.helixgrid",
+  "build": {
+    "frontendDist": "../src"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "HelixGrid — Distributed Drug Discovery",
+        "width": 960,
+        "height": 680
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.helixgrid.org https://helixgrid.org https://files.rcsb.org https://data.rcsb.org https://pubchem.ncbi.nlm.nih.gov http://127.0.0.1:* http://localhost:*; img-src 'self' data: blob:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": true,
+    "externalBin": [
+      "bin/vina"
+    ],
+    "resources": [
+      "affinity_model.onnx",
+      "affinity_model.onnx.data",
+      "model_parkinson_lrrk2.onnx",
+      "model_parkinson_lrrk2.onnx.data",
+      "model_antibiotic_pknb.onnx",
+      "model_antibiotic_pknb.onnx.data",
+      "bin/vina",
+      "data/receptors/*"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "hardenedRuntime": true,
+      "entitlements": "Entitlements.plist",
+      "infoPlist": "Info.plist"
+    },
+    "windows": {
+      "bundleVCRuntime": true
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDFDRjFFQUU0NDUzNEVDNEQKUldSTjdEUkY1T3J4SENUTkd0K1B0MnlYUko5OS9DaWY3aXJBYkdYUTM3TWZiQThvMlNVVmc2LzMK",
+      "endpoints": [
+        "https://github.com/CamilGrondin/helixgrid-updates/releases/latest/download/latest.json",
+        "https://raw.githubusercontent.com/CamilGrondin/helixgrid-updates/main/latest.json"
+      ]
+    }
+  }
+}

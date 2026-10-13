@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HelixGrid — Distributed Drug Discovery</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <!-- 3Dmol.js (WebGL Visualisation 3D local) -->
+    <script src="/assets/3Dmol-min.js"></script>
+    <!-- SmilesDrawer (Visualisation 2D native des molécules) -->
+    <script src="/assets/smiles-drawer.min.js"></script>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+  <body>
+    <!-- PANNEAU GAUCHE : Visualisation 3D (3Dmol.js) -->
+    <div id="left-panel">
+      <div id="target-header">
+        <span id="target-title">🫁 Cancer du Poumon (EGFR T790M)</span>
+        <span class="pdb-pill" id="pdb-badge">PDB: 2JIT</span>
+      </div>
+      <div id="viewer"></div>
+      <div id="viewer-loading">⏳ Chargement de la structure 3D...</div>
+
+      <!-- Barre d'outils flottante de la vue 3D -->
+      <div id="viewer-toolbar">
+        <button id="view-pocket-btn" class="view-btn active" title="Centrer la caméra sur la poche de liaison active">
+          🎯 Focus Poche
+        </button>
+        <button id="view-global-btn" class="view-btn" title="Vue globale de la protéine entière">
+          🌐 Vue Protéine
+        </button>
+        <button id="toggle-surface-btn" class="view-btn" title="Afficher/masquer la surface de la poche catalytique">
+          ✨ Surface Poche
+        </button>
+        <button id="toggle-spin-btn" class="view-btn" title="Activer/désactiver la rotation continue automatique">
+          🔄 Rotation Auto
+        </button>
+      </div>
+    </div>
+
+    <!-- PANNEAU DROIT : Onglets, Contrôles, 2D, Leaderboard, Gamification -->
+    <div id="right-panel">
+      <!-- En-tête de l'application -->
+      <div class="panel-header">
+        <div class="app-brand">
+          <img src="/assets/logo.png" alt="HelixGrid Logo" />
+          <div>
+            <h2>HelixGrid</h2>
+            <span>Distributed Autonomous Drug Discovery</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation par Onglets -->
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="tab-compute">
+          🧪 Recherche & Calcul
+        </button>
+        <button class="tab-btn" data-tab="tab-leaderboard">
+          🏆 Leaderboard
+        </button>
+        <button class="tab-btn" data-tab="tab-profile">
+          👤 Profil & Impact
+        </button>
+        <button class="tab-btn" data-tab="tab-settings">
+          ⚙️ Paramètres
+        </button>
+      </div>
+
+      <!-- ===================================================================
+           ONGLET 1 : RECHERCHE & CALCUL
+      ==================================================================== -->
+      <div id="tab-compute" class="tab-content active">
+        <!-- Bannière de mise à jour éventuelle -->
+        <div id="update-banner" class="form-section" style="display: none; background: linear-gradient(135deg, #1e3a5f, #0d253f); border-color: #3b82f6;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-weight: bold; color: #60a5fa; font-size: 13px;">🚀 Mise à jour disponible</span>
+            <span id="update-version" class="pdb-pill">v0.3.0</span>
+          </div>
+          <div id="update-notes" style="font-size: 11px; color: #cbd5e1; margin-bottom: 8px;">Nouvelle version disponible.</div>
+          <button id="update-btn" class="btn-secondary" style="width: 100%; background: #2563eb; color: #fff;">Mettre à jour maintenant</button>
+        </div>
+
+        <!-- Section de Sélection Cible & IA -->
+        <div class="form-section">
+          <div class="form-group">
+            <label for="disease-select">🎯 Maladie & Cible Thérapeutique :</label>
+            <select id="disease-select">
+              <option value="EGFR_T790M" data-pdb="2JIT" selected>🫁 Cancer du Poumon (EGFR T790M Résistant)</option>
+              <option value="SARS_CoV_2_Mpro" data-pdb="7BQ7">🦠 Covid-19 / Antiviral (Protéase Mpro)</option>
+              <option value="KRAS_G12D" data-pdb="8T5V">🎗️ Cancer Pancréas & Côlon (Mutant KRAS G12D)</option>
+              <option value="BACE1_Alzheimer" data-pdb="1FKN">🧠 Maladie d'Alzheimer (BACE-1 Protéase)</option>
+              <option value="HER2_Breast" data-pdb="3PP0">🔬 Cancer du Sein (Récepteur HER2 / ERBB2)</option>
+              <option value="Parkinson_LRRK2" data-pdb="3PP0">🧠 Maladie de Parkinson (LRRK2 G2019S)</option>
+              <option value="PKNB_Tuberculosis" data-pdb="8T5V">💊 Antibiorésistance / Tuberculose (PknB)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="engine-select">🧠 Moteur IA & Algorithme :</label>
+            <select id="engine-select">
+              <option value="generative_evolution" selected>🔬 IA Générative De Novo (SMARTS + Évolution Rust)</option>
+              <option value="selfies_dmpnn">🧬 IA SELFIES + Graph Neural Network (D-MPNN)</option>
+              <option value="deep_learning_onnx">⚡ Screening Neural Haute Fréquence (Deep MLP ONNX)</option>
+              <option value="brics_fragment">🧩 Recombinaison Rétrosynthétique (Fragments BRICS)</option>
+              <option value="swarm_active_learning">🐝 Swarm Intelligence (Apprentissage Collaboratif Distribué)</option>
+            </select>
+          </div>
+
+          <div id="target-desc-box">
+            Chargement des détails de la cible...
+          </div>
+
+          <!-- Contrôle d'allocation des ressources (Curseur CPU) -->
+          <div class="resource-control-box">
+            <div class="slider-header">
+              <label for="cpu-slider" style="margin: 0;">⚡ Allocation des Ressources CPU :</label>
+              <span id="cpu-slider-val" class="slider-value">100% CPU</span>
+            </div>
+
+            <input type="range" id="cpu-slider" class="custom-range" min="10" max="100" step="5" value="100" />
+
+            <div class="preset-buttons">
+              <button class="preset-btn" data-cpu="25">25% (Éco)</button>
+              <button class="preset-btn" data-cpu="50">50% (Moyen)</button>
+              <button class="preset-btn" data-cpu="75">75% (Intensif)</button>
+              <button class="preset-btn active" data-cpu="100">100% (Turbo)</button>
+            </div>
+
+            <!-- Mode économiseur d'écran -->
+            <label class="idle-toggle-container">
+              <input type="checkbox" id="idle-only-toggle" />
+              <span>Mode économiseur d'écran (calcul uniquement lorsque l'ordinateur est inactif)</span>
+            </label>
+
+            <div id="resource-status-pill" class="resource-status-pill">
+              ● Calcul actif (Puissance maximale)
+            </div>
+          </div>
+        </div>
+
+        <div id="action-bar">
+          <button id="start-btn">🚀 Démarrer la Génération & le Calcul</button>
+        </div>
+
+        <!-- CARTE : Visualisation 2D de la Molécule Découverte -->
+        <div class="mol-2d-card">
+          <div class="section-title">
+            <span>🔬 Molécule Découverte Active</span>
+            <span id="mol-status-badge" style="font-size: 10px; color: #10b981; font-weight: bold;">En attente</span>
+          </div>
+
+          <div class="mol-2d-container">
+            <canvas id="mol-2d-canvas" width="380" height="170"></canvas>
+            <div id="mol-placeholder" class="mol-placeholder">
+              Lancez le calcul pour voir le schéma 2D de la molécule générée en direct.
+            </div>
+          </div>
+
+          <div class="mol-meta-grid">
+            <div class="metric-pill">
+              <span class="lbl">Score pKd</span>
+              <span id="mol-meta-pkd" class="val highlight">—</span>
+            </div>
+            <div class="metric-pill">
+              <span class="lbl">Masse (MW)</span>
+              <span id="mol-meta-mw" class="val">—</span>
+            </div>
+            <div class="metric-pill">
+              <span class="lbl">LogP</span>
+              <span id="mol-meta-logp" class="val">—</span>
+            </div>
+            <div class="metric-pill">
+              <span class="lbl">SAscore</span>
+              <span id="mol-meta-sascore" class="val">—</span>
+            </div>
+          </div>
+
+          <div class="mol-smiles-box">
+            <span id="mol-smiles-text" class="mol-smiles-text">SMILES en attente d'évaluation...</span>
+            <button id="copy-smi-btn" class="copy-smi-btn">Copier</button>
+          </div>
+        </div>
+
+        <!-- Terminal de logs -->
+        <div id="log-container">
+          <div class="log-line">En attente de démarrage... Prêt à explorer l'espace chimique.</div>
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           ONGLET 2 : LEADERBOARD MONDIAL (TEMPS RÉEL)
+      ==================================================================== -->
+      <div id="tab-leaderboard" class="tab-content">
+        <!-- Statistiques globales réseau -->
+        <div class="stats-banner">
+          <div class="stat-box">
+            <span id="lb-stat-screened" class="stat-num">—</span>
+            <span class="stat-label">Criblées</span>
+          </div>
+          <div class="stat-box">
+            <span id="lb-stat-hits" class="stat-num">—</span>
+            <span class="stat-label">Pépites</span>
+          </div>
+          <div class="stat-box">
+            <span id="lb-stat-best" class="stat-num">—</span>
+            <span class="stat-label">Max pKd</span>
+          </div>
+          <div class="stat-box">
+            <span id="lb-stat-workers" class="stat-num">—</span>
+            <span class="stat-label">Bénévoles</span>
+          </div>
+        </div>
+
+        <!-- Barre d'outils du Leaderboard -->
+        <div class="leaderboard-toolbar">
+          <select id="lb-filter-target" style="flex: 1; padding: 7px 10px;">
+            <option value="">Toutes les pathologies</option>
+            <option value="EGFR_T790M">🫁 Cancer Poumon (EGFR)</option>
+            <option value="SARS_CoV_2_Mpro">🦠 Covid-19 (Mpro)</option>
+            <option value="KRAS_G12D">🎗️ Cancer Pancréas (KRAS)</option>
+            <option value="BACE1_Alzheimer">🧠 Alzheimer (BACE-1)</option>
+            <option value="HER2_Breast">🔬 Cancer Sein (HER2)</option>
+            <option value="Parkinson_LRRK2">🧠 Parkinson (LRRK2)</option>
+            <option value="PKNB_Tuberculosis">💊 Tuberculose (PknB)</option>
+          </select>
+
+          <button id="lb-refresh-btn" class="btn-secondary" title="Rafraîchir les scores en direct">
+            🔄 Rafraîchir
+          </button>
+          <button id="lb-export-sdf-btn" class="btn-secondary" title="Télécharger le fichier SDF multi-molécules">
+            📥 Export SDF
+          </button>
+        </div>
+
+        <!-- Liste des molécules qualifiées -->
+        <div id="leaderboard-hits-list" class="leaderboard-list">
+          <div style="text-align: center; color: var(--text-dim); padding: 40px; font-size: 12px;">
+            Chargement des pépites du réseau...
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           ONGLET 3 : PROFIL & GAMIFICATION (IMPACT CITOYEN)
+      ==================================================================== -->
+      <div id="tab-profile" class="tab-content">
+        <!-- Configuration du Profil Bénévole -->
+        <div class="profile-box">
+          <div class="section-title">
+            <span>👤 Mon Profil Bénévole</span>
+            <span id="volunteer-tier-badge" class="pdb-pill">Chercheur Citoyen</span>
+          </div>
+          <label for="volunteer-pseudo-input">Identifiant / Pseudonyme public pour la recherche :</label>
+          <div class="profile-input-group">
+            <input type="text" id="volunteer-pseudo-input" placeholder="Ex: Marie_Curie, BioHacker_42" />
+            <button id="save-pseudo-btn" class="profile-save-btn">Enregistrer</button>
+          </div>
+        </div>
+
+        <!-- Statistiques d'énergie et de calcul apportés -->
+        <div class="stats-banner" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 14px;">
+          <div class="stat-box">
+            <span id="user-stat-screened" class="stat-num">0</span>
+            <span class="stat-label">Mes Molécules</span>
+          </div>
+          <div class="stat-box">
+            <span id="user-stat-hits" class="stat-num">0</span>
+            <span class="stat-label">Mes Pépites</span>
+          </div>
+          <div class="stat-box">
+            <span id="user-stat-time" class="stat-num">0m</span>
+            <span class="stat-label">Temps Calcul</span>
+          </div>
+          <div class="stat-box">
+            <span id="user-stat-energy" class="stat-num">0.00 kWh</span>
+            <span class="stat-label">Énergie Estimée</span>
+          </div>
+        </div>
+
+        <!-- Répartition de la recherche par pathologie -->
+        <div class="disease-impact-box">
+          <div class="section-title">
+            <span>🎗️ Répartition de l'Effort Scientifique</span>
+          </div>
+
+          <div class="impact-row">
+            <div class="impact-label">
+              <span>🫁 & 🎗️ Recherche contre le Cancer (EGFR, KRAS, HER2)</span>
+              <span id="impact-pct-cancer">0%</span>
+            </div>
+            <div class="progress-track">
+              <div id="impact-bar-cancer" class="progress-bar bar-cancer" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="impact-row">
+            <div class="impact-label">
+              <span>🧠 Maladies Neurodégénératives (Alzheimer BACE-1)</span>
+              <span id="impact-pct-neuro">0%</span>
+            </div>
+            <div class="progress-track">
+              <div id="impact-bar-neuro" class="progress-bar bar-neuro" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="impact-row">
+            <div class="impact-label">
+              <span>🦠 Pathologies Infectieuses & Virales (Covid-19 Mpro)</span>
+              <span id="impact-pct-antiviral">0%</span>
+            </div>
+            <div class="progress-track">
+              <div id="impact-bar-antiviral" class="progress-bar bar-antiviral" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Galerie des Badges de Découverte (Achievements) -->
+        <div class="form-section">
+          <div class="section-title">
+            <span>🎖️ Badges de Découverte & Accomplissements</span>
+            <span id="badges-unlocked-count" style="font-size: 11px; color: #60a5fa; font-weight: 700;">0 / 8 débloqués</span>
+          </div>
+
+          <div class="badges-grid">
+            <!-- Badge 1 -->
+            <div id="badge-first-step" class="badge-card">
+              <div class="badge-icon">🌟</div>
+              <div class="badge-details">
+                <h4>Premier Pas Scientifique</h4>
+                <p>Évaluer ses 50 premières molécules pour le réseau.</p>
+                <div class="badge-status">🔒 Verrouillé</div>
+              </div>
+            </div>
+
+            <!-- Badge 2 -->
+            <div id="badge-distributed-power" class="badge-card">
+              <div class="badge-icon">⚡</div>
+              <div class="badge-details">
+                <h4>Puissance Distribuée</h4>
+                <p>Cribler plus de 500 molécules pour la recherche.</p>
+                <div class="badge-status">🔒 Verrouillé</div>
+              </div>
+            </div>
+
+            <!-- Badge 3 -->
+            <div id="badge-supercomputer" class="badge-card">
+              <div class="badge-icon">🚀</div>
+              <div class="badge-details">
+                <h4>Super-Calculateur Citoyen</h4>
+                <p>Allouer de la puissance pour 2 500 molécules criblées.</p>
+                <div class="badge-status">🔒 Verrouillé</div>
+              </div>
+            </div>
+
+            <!-- Badge 4 -->
+            <div id="badge-subnanomolar" class="badge-card special-gold">
+              <div class="badge-icon">💎</div>
+              <div class="badge-details">
+                <h4>Inhibiteur Sub-Nanomolaire</h4>
+                <p>Découvrir une molécule avec pKd ≥ 9.0 (Kd &lt; 1 nM).</p>
+                <div class="badge-status">🔒 Verrouillé</div>
+              </div>
+            </div>
+
+            <!-- Badge 5 -->
+            <div id="badge-oncogene" class="badge-card">
+              <div class="badge-icon">🎯</div>
+              <div class="badge-details">
+                <h4>Traqueur d'Oncogène</h4>
+                <p>Découvrir une pépite qualifiée contre EGFR ou KRAS.</p>
+                <div class="badge-status">🔒 Verrouillé</div>
+              </div>
+            </div>
+
+            <!-- Badge 6 -->
+            <div id="badge-neuro" class="badge-card">
+              <div class="badge-icon">🧠</div>
+              <div class="badge-details">
+                <h4>Pionnier Neuro-Protecteur</h4>
+                <p>Découvrir un inhibiteur potentiel de BACE-1 (Alzheimer).</p>
+                <div class="badge-status">🔒 Verrouillé</div>
+              </div>
+            </div>
+
+            <!-- Badge 7 -->
+            <div id="badge-medicinal" class="badge-card">
+              <div class="badge-icon">🛡️</div>
+              <div class="badge-details">
+                <h4>Chimiste Médicinal Pur</h4>
+                <p>Pépite 100% PAINS-free avec SAscore &lt; 3.0.</p>
+                <div class="badge-status">🔒 Verrouillé</div>
+              </div>
+            </div>
+
+            <!-- Badge 8 -->
+            <div id="badge-top-contributor" class="badge-card special-gold">
+              <div class="badge-icon">🏆</div>
+              <div class="badge-details">
+                <h4>Héros d'HelixGrid</h4>
+                <p>Figurer sur le Leaderboard mondial des découvreurs.</p>
+                <div class="badge-status">🔒 Verrouillé</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           ONGLET 4 : PARAMÈTRES & COMPTE
+      ==================================================================== -->
+      <div id="tab-settings" class="tab-content">
+        <!-- Section 1 : Comportement & Énergie -->
+        <div class="form-section">
+          <div class="section-title">
+            <span>⚡ Comportement Système & Énergie</span>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <span class="setting-title">Empêcher la mise en veille</span>
+              <span class="setting-desc">Maintient le CPU et le système éveillés pendant les calculs actifs (processus natif <code>caffeinate</code> sous macOS).</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-prevent-sleep" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <span class="setting-title">Garder actif dans la barre des menus</span>
+              <span class="setting-desc">Fermer la fenêtre réduit l'application dans la barre des menus (System Tray) sans couper les calculs en cours.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-keep-tray" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Section 2 : Compte Bénévole & Clé Cryptographique -->
+        <div class="form-section">
+          <div class="section-title">
+            <span>👤 Compte Bénévole & Cryptographie</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label for="settings-pseudo-input">Pseudonyme du Bénévole :</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="settings-pseudo-input" placeholder="Ex: Curie-Node-42" maxlength="32" style="flex: 1;" />
+              <button id="settings-save-pseudo-btn" class="btn-secondary" style="padding: 0 14px;">Enregistrer</button>
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Attribué à vos pépites transmises au serveur central et affiché sur le Leaderboard.</div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label>Clé Publique Ed25519 (Signature Inviolable) :</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <div id="settings-pubkey-display" class="key-display-box" style="flex: 1;" title="Cliquez sur Copier pour exporter votre clé publique">Chargement de la clé...</div>
+              <button id="settings-copy-pubkey-btn" class="btn-secondary" style="padding: 0 12px;">📋 Copier</button>
+            </div>
+            <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Prouve cryptographiquement la paternité de vos molécules découvertes sans dévoiler de secret.</div>
+          </div>
+
+          <div class="form-group">
+            <label>Données Locales & Tampon Hors-ligne :</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 12px;">
+              <div>
+                <div style="font-size: 11px; font-weight: 600; color: var(--text-main);">Base SQLite Tampon (Offline Buffer)</div>
+                <div id="settings-buffer-status" style="font-size: 10px; color: var(--accent-green); margin-top: 2px;">0 pépite(s) en attente</div>
+              </div>
+              <button id="settings-open-dir-btn" class="btn-secondary" style="padding: 6px 12px;">📂 Ouvrir le dossier</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3 : Réseau & Serveur Central -->
+        <div class="form-section">
+          <div class="section-title">
+            <span>🌐 Réseau & Serveur Central</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label for="settings-server-url-input">URL du Serveur HelixGrid :</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="settings-server-url-input" placeholder="https://api.helixgrid.org" style="flex: 1; font-family: monospace; font-size: 11px;" />
+              <button id="settings-test-server-btn" class="btn-secondary" style="padding: 0 12px;">Tester</button>
+              <button id="settings-save-server-btn" class="btn-secondary" style="padding: 0 12px; background: rgba(59, 130, 246, 0.25); border-color: var(--accent-blue); color: #fff;">Appliquer</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+              <span id="settings-server-status" style="font-size: 10px; color: var(--text-dim);">État : Prêt</span>
+              <button id="settings-reset-server-btn" style="background: none; border: none; color: var(--accent-blue); font-size: 10px; cursor: pointer; text-decoration: underline; padding: 0;">Restaurer l'adresse officielle</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4 : Informations & Version -->
+        <div class="form-section" style="font-size: 11px; color: var(--text-muted); line-height: 1.6;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="color: var(--text-main);">HelixGrid Desktop v0.3.0</strong>
+            <span class="pdb-pill">Rust + ONNX</span>
+          </div>
+          <div>Moteur de découverte distribuée de candidats médicaments combinant IA générative De Novo, évaluation pharmacologique PAINS/Brenk et scoring haute précision en Rust natif.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conteneur pour les notifications toast -->
+    <div id="toast-container"></div>
+  </body>
+</html>

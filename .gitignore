@@ -1,0 +1,51 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+# Keys & Secrets
+*.key
+*.key.pub
+updater.key
+updater.key.pub
+.env
+.env.*
+
+# Cargo & Tauri Build Artefacts
+target/
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# Python Cache & Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# AutoDock Vina External Binaries (fetched via scripts/fetch_vina_binaries.py)
+bin/vina*
+src-tauri/bin/vina*
+!src-tauri/bin/.gitkeep
+
+# OS files
+.DS_Store
+*/.DS_Store
+Thumbs.db

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {
+    "createUpdaterArtifacts": true,
+    "externalBin": [
+      "bin/vina"
+    ],
+    "windows": {
+      "bundleVCRuntime": true,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com"
+    },
+    "resources": [
+      "affinity_model.onnx",
+      "affinity_model.onnx.data",
+      "model_parkinson_lrrk2.onnx",
+      "model_parkinson_lrrk2.onnx.data",
+      "model_antibiotic_pknb.onnx",
+      "model_antibiotic_pknb.onnx.data",
+      "bin/vina.exe",
+      "data/receptors/*",
+      "DirectML.dll"
+    ]
+  }
+}
